@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\FlyAotOrm.Abstractions\FlyAotOrm.Abstractions.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>FlyAotOrm.Core</PackageId>
+    <Description>NativeAOT-friendly typed SQL DSL, renderers, and ADO.NET execution runtime for FlyAotOrm.</Description>
+  </PropertyGroup>
+
+</Project>

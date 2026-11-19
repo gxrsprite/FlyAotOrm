@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <Authors>FlyAotOrm contributors</Authors>
+    <Company>FlyAotOrm</Company>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/gxrsprite/FlyAotOrm</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/gxrsprite/FlyAotOrm</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts\packages</PackageOutputPath>
+    <PackageTags>NativeAOT;ORM;ADO.NET;SourceGenerator;SQL</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' != 'false'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+</Project>

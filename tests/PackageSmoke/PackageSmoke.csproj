@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishAot>true</PublishAot>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>false</IsPackable>
+    <RestoreAdditionalProjectSources>$(MSBuildThisFileDirectory)../../artifacts/packages</RestoreAdditionalProjectSources>
+    <RestorePackagesPath>$(MSBuildThisFileDirectory)obj/packages</RestorePackagesPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FlyAotOrm.Abstractions" Version="$(Version)" />
+    <PackageReference Include="FlyAotOrm.Core" Version="$(Version)" />
+    <PackageReference Include="FlyAotOrm.Generator" Version="$(Version)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
+    <Compile Include="../../samples/Console/Program.cs" Link="Program.cs" />
+  </ItemGroup>
+</Project>

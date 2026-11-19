@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/samples/" />
+  <Folder Name="/samples/Console/">
+    <Project Path="samples/Console/FlyAotOrm.ConsoleSample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/FlyAotOrm.Abstractions/FlyAotOrm.Abstractions.csproj" />
+    <Project Path="src/FlyAotOrm.Core/FlyAotOrm.Core.csproj" />
+    <Project Path="src/FlyAotOrm.Generator/FlyAotOrm.Generator.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FlyAotOrm.Generator.Tests/FlyAotOrm.Generator.Tests.csproj" />
+  </Folder>
+</Solution>
