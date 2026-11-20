@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1120-beta1409" />
     <PackageReference Include="Npgsql" Version="10.0.3" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />

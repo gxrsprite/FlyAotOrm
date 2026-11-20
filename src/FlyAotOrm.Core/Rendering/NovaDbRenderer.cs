@@ -8,8 +8,12 @@ namespace FlyAotOrm;
 /// <c>DbConnection</c>): <c>@name</c> parameters and backtick identifiers.
 /// A dedicated renderer (rather than reusing <see cref="MySqlRenderer"/>)
 /// keeps the Nova-specific divergences below greppable as the engines evolve.
-/// Every divergence here was verified against a live NovaDb
-/// (<c>NewLife.NovaDb 1.0.2026.901</c>, embedded); see <c>docs/NovaDb.zh-CN.md</c>.
+/// Verified against live NovaDb 1.0.2026.901 and 1.0.2026.1120-beta1409
+/// (embedded); see <c>docs/NovaDb.zh-CN.md</c>. The 901 workarounds are kept:
+/// 1120 fixed most engine gaps, but these shapes remain semantically equivalent
+/// and keep the renderer working across both baselines. 1120 additionally made
+/// backslash escapes live on the server, so inline string literals now double
+/// backslashes (see <see cref="TryRenderInlineLiteral"/>).
 /// </summary>
 public sealed class NovaDbRenderer : SqlRenderer
 {
@@ -95,13 +99,23 @@ public sealed class NovaDbRenderer : SqlRenderer
     /// </summary>
     protected override bool TryRenderInlineLiteral(object? value, out string literal)
     {
-        if (value is bool boolean)
+        switch (value)
         {
-            literal = boolean ? "TRUE" : "FALSE";
-            return true;
+            case bool boolean:
+                literal = boolean ? "TRUE" : "FALSE";
+                return true;
+            case string text:
+                // 1120-beta onwards Nova decodes backslash escapes on the server.
+                // Without doubling, @"C:\new\test" arrives with LF/TAB control chars.
+                // Single quotes stay doubled via the standard SQL rule.
+                literal = "'" + text.Replace("\\", "\\\\").Replace("'", "''") + "'";
+                return true;
+            case char character:
+                literal = "'" + character.ToString().Replace("\\", "\\\\").Replace("'", "''") + "'";
+                return true;
+            default:
+                literal = string.Empty;
+                return false;
         }
-
-        literal = string.Empty;
-        return false;
     }
 }

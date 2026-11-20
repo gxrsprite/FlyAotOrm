@@ -5,9 +5,10 @@ using NewLife.NovaDb.Client;
 namespace FlyAotOrm.Generator.Tests;
 
 // NovaDb live tests: SQL-shape tests only assert strings; these run the real
-// engine (NewLife.NovaDb 1.0.2026.901, embedded) to lock the Nova divergences:
-// bare *, 1-IN-subquery Any, BETWEEN expansion, inline LIMIT/OFFSET,
-// TRUE/FALSE inline booleans, @-prefixed parameter binding.
+// engine (NewLife.NovaDb 1.0.2026.1120-beta1409, embedded) to lock the Nova
+// divergences: bare *, 1-IN-subquery Any, BETWEEN expansion, inline LIMIT/OFFSET,
+// TRUE/FALSE inline booleans, @-prefixed parameter binding, and backslash
+// escaping in inline string literals (server-side escapes since 1120).
 // Serial collection: embedded engines pin the temp dir (MMF) until released.
 [CollectionDefinition("NovaDbLive", DisableParallelization = true)]
 public class NovaDbLiveCollection { }
@@ -31,6 +32,17 @@ public sealed class NovaDbLiveTests : IDisposable
             setup.Open();
             Execute(setup, "CREATE TABLE users (id INT PRIMARY KEY, name STRING(50), flag BOOL, age INT)");
             Execute(setup, "INSERT INTO users (id, name, flag, age) VALUES (1, 'alice', TRUE, 30), (2, 'bob', FALSE, 25), (3, 'carol', TRUE, 22)");
+            // Bind a Windows path as a parameter: raw SQL would need doubled backslashes
+            // on 1120+ (server decodes escapes). This is the expected value in the table.
+            using (var insert = setup.CreateCommand())
+            {
+                insert.CommandText = "INSERT INTO users (id, name, flag, age) VALUES (4, @path, TRUE, 30)";
+                var parameter = insert.CreateParameter();
+                parameter.ParameterName = "@path";
+                parameter.Value = @"C:\new\test";
+                insert.Parameters.Add(parameter);
+                insert.ExecuteNonQuery();
+            }
             Execute(setup, "CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount INT)");
             Execute(setup, "INSERT INTO orders (id, user_id, amount) VALUES (1, 1, 100), (2, 1, 5)");
         }
@@ -51,15 +63,24 @@ public sealed class NovaDbLiveTests : IDisposable
     public async Task SelectAll_ReturnsAllRows()
     {
         var rows = await _db.Select(_users).ToListAsync();
-        Assert.True(rows.Count == 3, $"Expected 3 rows, got {rows.Count}.");
+        Assert.True(rows.Count == 4, $"Expected 4 rows, got {rows.Count}.");
     }
 
     [Fact]
     public async Task WhereBool_ParameterizedAndInline()
     {
-        Assert.Equal(2, (await _db.Select(_users).Where(_users.Flag.Eq(true)).ToListAsync()).Count);
-        Assert.Equal(2, (await _db.Select(_users).Where(_users.Flag.Eq(true)).InlineParameters().ToListAsync()).Count);
+        Assert.Equal(3, (await _db.Select(_users).Where(_users.Flag.Eq(true)).ToListAsync()).Count);
+        Assert.Equal(3, (await _db.Select(_users).Where(_users.Flag.Eq(true)).InlineParameters().ToListAsync()).Count);
         Assert.Single(await _db.Select(_users).Where(_users.Flag.Eq(false)).InlineParameters().ToListAsync());
+    }
+
+    [Fact]
+    public async Task InlineString_BackslashesRoundTrip()
+    {
+        const string path = @"C:\new\test";
+        Assert.Single(await _db.Select(_users).Where(_users.Name.Eq(path)).ToListAsync());
+        Assert.Single(await _db.Select(_users).Where(_users.Name.Eq(path)).InlineParameters().ToListAsync());
+        Assert.Empty(await _db.Select(_users).Where(_users.Name.Eq(@"C:\other\test")).InlineParameters().ToListAsync());
     }
 
     [Fact]
@@ -68,7 +89,7 @@ public sealed class NovaDbLiveTests : IDisposable
         var page1 = await _db.Select(_users).OrderBy(_users.Id.Asc()).Page(1, 2).ToListAsync();
         var page2 = await _db.Select(_users).OrderBy(_users.Id.Asc()).Page(2, 2).ToListAsync();
         Assert.Equal([1, 2], page1.Select(static u => u.Id));
-        Assert.Equal([3], page2.Select(static u => u.Id));
+        Assert.Equal([3, 4], page2.Select(static u => u.Id));
     }
 
     [Fact]
@@ -85,7 +106,7 @@ public sealed class NovaDbLiveTests : IDisposable
     [Fact]
     public async Task CountAsync_CountsFilteredRows()
     {
-        Assert.Equal(3, await _db.Select(_users).Where(_users.Age.GreaterThan(20)).CountAsync());
+        Assert.Equal(4, await _db.Select(_users).Where(_users.Age.GreaterThan(20)).CountAsync());
     }
 
     [Fact]

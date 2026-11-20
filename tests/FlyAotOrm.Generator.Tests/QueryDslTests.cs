@@ -419,6 +419,23 @@ public sealed class QueryDslTests
     }
 
     [Fact]
+    public void NovaDbInlineStringLiteral_DoublesBackslashes()
+    {
+        var users = new TestUserTable();
+        var db = new FlyDb(new SqliteConnection("Data Source=:memory:"), DbDialectKind.NovaDb);
+
+        var rendered = db
+            .Select(users)
+            .Where(users.Name.Eq(@"C:\new\test"))
+            .InlineParameters()
+            .ToSql();
+
+        // 1120-beta+ decodes backslash escapes server-side; inline literals must double them.
+        Assert.Equal("select * from `users` as `User` where `User`.`name` = 'C:\\\\new\\\\test'", rendered.Sql);
+        Assert.Empty(rendered.Parameters);
+    }
+
+    [Fact]
     public void RendersColumnToColumnComparisonOperators()
     {
         var orders = new TestOrderTable();
