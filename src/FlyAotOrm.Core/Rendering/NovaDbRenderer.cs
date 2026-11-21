@@ -8,12 +8,14 @@ namespace FlyAotOrm;
 /// <c>DbConnection</c>): <c>@name</c> parameters and backtick identifiers.
 /// A dedicated renderer (rather than reusing <see cref="MySqlRenderer"/>)
 /// keeps the Nova-specific divergences below greppable as the engines evolve.
-/// Verified against live NovaDb 1.0.2026.901 and 1.0.2026.1120-beta1409
-/// (embedded); see <c>docs/NovaDb.zh-CN.md</c>. The 901 workarounds are kept:
-/// 1120 fixed most engine gaps, but these shapes remain semantically equivalent
-/// and keep the renderer working across both baselines. 1120 additionally made
-/// backslash escapes live on the server, so inline string literals now double
-/// backslashes (see <see cref="TryRenderInlineLiteral"/>).
+/// Verified against live NovaDb 1.0.2026.901, 1.0.2026.1120-beta1409 and
+/// 1.0.2026.1121-beta0244 (embedded); see <c>docs/NovaDb.zh-CN.md</c>.
+/// The 901 workarounds are kept: 1120 fixed most engine gaps, but these shapes
+/// remain semantically equivalent and keep the renderer working across all three
+/// baselines. 1120 made backslash escapes live on the server, so inline string
+/// literals double backslashes (see <see cref="TryRenderInlineLiteral"/>).
+/// 1121 added index/LIMIT pushdown; inlining LIMIT/OFFSET as integer literals
+/// (see <see cref="AppendPaging"/>) is what lets the engine push the limit down.
 /// </summary>
 public sealed class NovaDbRenderer : SqlRenderer
 {

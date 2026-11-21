@@ -5,10 +5,11 @@ using NewLife.NovaDb.Client;
 namespace FlyAotOrm.Generator.Tests;
 
 // NovaDb live tests: SQL-shape tests only assert strings; these run the real
-// engine (NewLife.NovaDb 1.0.2026.1120-beta1409, embedded) to lock the Nova
+// engine (NewLife.NovaDb 1.0.2026.1121-beta0244, embedded) to lock the Nova
 // divergences: bare *, 1-IN-subquery Any, BETWEEN expansion, inline LIMIT/OFFSET,
 // TRUE/FALSE inline booleans, @-prefixed parameter binding, and backslash
 // escaping in inline string literals (server-side escapes since 1120).
+// 1121 adds index/LIMIT pushdown; Explain_* pins the access-plan vocabulary.
 // Serial collection: embedded engines pin the temp dir (MMF) until released.
 [CollectionDefinition("NovaDbLive", DisableParallelization = true)]
 public class NovaDbLiveCollection { }
@@ -114,6 +115,26 @@ public sealed class NovaDbLiveTests : IDisposable
     {
         Assert.True(await _db.Select(_users).Where(_users.Id.Eq(1)).AnyAsync());
         Assert.False(await _db.Select(_users).Where(_users.Id.Eq(999)).AnyAsync());
+    }
+
+    [Fact]
+    public void Explain_PrimaryKeyLookup_ReportsPlan()
+    {
+        // 1121-beta0244 (upstream 7b81b4d) makes PK equality use an index plan
+        // instead of a full scan. Pin the plan vocabulary so an engine upgrade
+        // that silently regresses to FullScan is visible.
+        using var command = _connection.CreateCommand();
+        command.CommandText = "EXPLAIN SELECT * FROM users WHERE id = 1";
+        using var reader = command.ExecuteReader();
+        Assert.True(reader.Read());
+
+        var values = new List<string>();
+        for (var i = 0; i < reader.FieldCount; i++)
+        {
+            values.Add(Convert.ToString(reader.GetValue(i), System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty);
+        }
+
+        Assert.Contains("PK LOOKUP", string.Join(" | ", values), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

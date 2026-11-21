@@ -4,14 +4,15 @@
 [NewLife.NovaDb](https://github.com/NewLifeX/NewLife.NovaDb)
 （纯 C# 混合数据库：关系 + 时序 + MQ + KV 四引擎，嵌入/服务双模）。
 
-实测基线：**`NewLife.NovaDb 1.0.2026.1120-beta1409`**（2026-11-20 构建），
+实测基线：**`NewLife.NovaDb 1.0.2026.1121-beta0244`**（2026-11-21 构建），
 嵌入模式。早期 901 基线的适配由 `NovaDbRenderer` 的兼容层保留，
 当前基线由本仓 `NovaDbLiveTests`（真库）+ WebdavSharp 实战共同锁定。
-上游缺口与版本选择见 [WebdavSharp 的 docs/novadb.md](../../Server/WebdavSharp/docs/novadb.md)。
+上游变更与版本选择见 [WebdavSharp 的 docs/novadb.md](../../Server/WebdavSharp/docs/novadb.md)。
 
-> 版本选择：1024 稳定版不含 MySQL 方言兼容修复；1120-beta 才包含 master 上
+> 版本选择：1024 稳定版不含 MySQL 方言兼容修复；1120-beta 包含 master 上
 > 11/20 那批提交（`LIMIT m,n`、`库.表`、BIT、`LOCATE/CHAR_LENGTH`、
-> `CHANGE COLUMN/RENAME TABLE`、内联索引、bool 0/1、规范类型名等）。
+> `CHANGE COLUMN/RENAME TABLE`、内联索引、bool 0/1、规范类型名等）；
+> **1121-beta0244 再加 `7b81b4d`：SELECT 真正走主键/二级索引 + LIMIT 下推**。
 > 等上游出稳定版后换版本号重跑测试即可。
 
 ## 一句话画像
@@ -101,6 +102,9 @@ var one = await UserCrud.GetByIdAsync(conn, id, DbDialectKind.NovaDb);
 | 内联字符串 `\`（如 `C:\new\test`） | 服务端不解码 | ⚠️ 服务端解码标准转义序列 | `InlineParameters()` 字面量 `\` → `\\`（`'` 仍 `''`）；参数化值不受影响 |
 | 参数名 `p0` 配 `@p0` 占位符 | ❌ `Parameter '@p0' not found` | 兼容 | `CommandParameters` 统一补 `@`（四库实测兼容） |
 
+`LIMIT`/`OFFSET` 永远渲染为整数字面量（`AppendPaging`）。这既是 901 的解析要求，
+也是 1121 起 LIMIT 下推生效的前提：无排序/分组/聚合时引擎只反序列化需要的行。
+
 901 的兼容层在 1120 上仍语义等价且真库通过，因此保留而不是切回标准 SQL：
 同一渲染器覆盖两个基线。1120 新增的**反斜杠转义**必须处理，否则内联字面量
 里的 `C:\new\test` 会被服务端解码成含 LF/TAB 的控制字符。
@@ -108,6 +112,24 @@ var one = await UserCrud.GetByIdAsync(conn, id, DbDialectKind.NovaDb);
 `JOIN`（`LEFT` 亦可）、`LIKE`（大小写不敏感）、`IN`（值列表/子查询）、
 `IS NULL`、聚合（`COUNT/SUM/AVG/MIN/MAX`）、`CASE WHEN` 均直通。
 `Skip` 必须配合 `Take`/`Page`（只有 skip 不产生分页 SQL，与其它方言一致）。
+
+## SELECT 性能现状（1121-beta 起索引生效）
+
+1120-beta 及之前，SQL 层所有查询都是全表扫描 + 内存 `WHERE` 过滤，二级索引只对写有意义。
+1121-beta0244（上游 `7b81b4d`）已修复：
+
+- 访问计划推导：`PK LOOKUP`（主键等值/IN）、`PK RANGE`（主键范围）、
+  `INDEX LOOKUP`（单列二级索引等值/IN），其余 `FullScan`。
+- 索引只缩小候选集，结果始终按完整 `WHERE` 复核；命中占比过高
+  （`FullScanFallbackMinRows`）时回退全表扫描，避免低选择性索引反而变慢。
+- **LIMIT 下推**：无排序/分组/聚合时只反序列化需要的行。
+- 字符串索引键统一大写（与 SQL 大小写不敏感比较一致）；**索引文件版本升到 2，
+  旧文件自动重建**（旧库升级无感）。
+- `EXPLAIN` 与执行共用同一计划推导。本仓 `NovaDbLiveTests.Explain_PrimaryKeyLookup_ReportsPlan`
+  锁定主键点查输出 `PK LOOKUP`，引擎升级若退回全扫会立刻可见。
+
+FlyAotOrm 侧无需改 SQL 形态：`Where(...)` 命中索引列、`Take`/`Page` 内联 `LIMIT`
+即可吃到索引与下推。没有索引的条件仍走全表扫描，大表分页建议给筛选列建索引。
 
 ## 函数速查（DSL 相关）
 
@@ -133,6 +155,7 @@ DATEADD / DATE_FORMAT / DATEDIFF`。901 缺少的 `LOCATE/CHAR_LENGTH/UTC_TIMEST
 3. 时序/MQ/KV 三引擎走 `NovaClient` RPC 或同库 `ENGINE=FLUX/KV` 表，
    不在 FlyAotOrm 关系路径内，需要时直写 SQL。
 4. `NovaConnection.DisposeSharedEngines()` 可在测试/短连接场景显式释放嵌入引擎。
+5. 无索引条件的大表查询仍是全表扫描；1121 起索引文件版本为 2，旧库首次打开会自动重建索引。
 
 ## AOT 说明
 
