@@ -7,7 +7,11 @@
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <NoWarn>$(NoWarn);RS2008</NoWarn>
     <PackageId>FlyAotOrm.Generator</PackageId>
-    <Description>Source generator for FlyAotOrm entity metadata, typed tables, CRUD helpers, repositories, and projection materializers.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/gxrsprite/FlyAotOrm</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/gxrsprite/FlyAotOrm</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>FlyAotOrm 是 NativeAOT 优先的轻量级 ORM，适合 AI 辅助开发的工具类和小型应用。本包在编译期生成实体元数据、类型化表和列、CRUD、Repository 与 DTO 映射代码，配合 Core 使用，无需运行时反射映射。</Description>
     <PackageType>Analyzer</PackageType>
     <DevelopmentDependency>true</DevelopmentDependency>
     <IncludeBuildOutput>false</IncludeBuildOutput>

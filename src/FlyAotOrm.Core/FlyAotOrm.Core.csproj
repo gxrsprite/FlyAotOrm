@@ -9,7 +9,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>FlyAotOrm.Core</PackageId>
-    <Description>NativeAOT-friendly typed SQL DSL, renderers, and ADO.NET execution runtime for FlyAotOrm.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/gxrsprite/FlyAotOrm</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/gxrsprite/FlyAotOrm</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>FlyAotOrm 是 NativeAOT 优先的轻量级 ORM，适合 AI 辅助开发的工具类和小型应用。提供类型化 SQL DSL、多数据库方言和 ADO.NET 执行层，配合源生成器实现实体映射与 CRUD，不依赖运行时反射映射或表达式编译。</Description>
   </PropertyGroup>
 
 </Project>

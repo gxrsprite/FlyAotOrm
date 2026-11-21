@@ -5,7 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>FlyAotOrm.Abstractions</PackageId>
-    <Description>Attributes and shared contracts for FlyAotOrm NativeAOT typed SQL DSL.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/gxrsprite/FlyAotOrm</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/gxrsprite/FlyAotOrm</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>FlyAotOrm 是 NativeAOT 优先的轻量级 ORM，适合 AI 辅助开发的工具类和小型应用。本包提供实体映射特性与公共契约，配合 Core 和 Generator 使用，通过编译期生成代码减少运行时复杂性。</Description>
   </PropertyGroup>
 
 </Project>
