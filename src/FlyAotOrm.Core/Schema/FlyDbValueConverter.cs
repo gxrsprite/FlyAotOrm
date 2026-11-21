@@ -17,7 +17,9 @@ public static class FlyDbValueConverter
         var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
         if (targetType.IsEnum)
         {
-            return (T)Enum.ToObject(targetType, value);
+            return (T)(value is string text
+                ? Enum.Parse(targetType, text, ignoreCase: false)
+                : Enum.ToObject(targetType, value));
         }
 
         if (targetType == typeof(Guid))
@@ -44,6 +46,9 @@ public static class FlyDbValueConverter
     }
 
     public static object? ToDatabase(object? value)
+        => ToDatabase(value, DbEnumStorage.Number);
+
+    public static object? ToDatabase(object? value, DbEnumStorage enumStorage)
     {
         if (value is null)
         {
@@ -53,6 +58,11 @@ public static class FlyDbValueConverter
         var type = value.GetType();
         if (type.IsEnum)
         {
+            if (enumStorage == DbEnumStorage.String)
+            {
+                return value.ToString();
+            }
+
             return Convert.ChangeType(value, Enum.GetUnderlyingType(type), System.Globalization.CultureInfo.InvariantCulture);
         }
 

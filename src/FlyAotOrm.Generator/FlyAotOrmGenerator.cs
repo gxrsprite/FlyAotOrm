@@ -278,7 +278,8 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                     IsIdentity(property),
                     IsNullable(property),
                     IsSoftDelete(property),
-                    IsTenant(property)))
+                    IsTenant(property),
+                    StoresEnumAsString(property)))
                 .ToImmutableArray();
 
             var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
@@ -359,6 +360,12 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                    OriginalDefinition.SpecialType: SpecialType.System_Nullable_T
                };
 
+        private static bool StoresEnumAsString(IPropertySymbol property)
+            => property.GetAttributes()
+                .Where(static attr => attr.AttributeClass?.ToDisplayString() == "FlyAotOrm.DbColumnAttribute")
+                .SelectMany(static attr => attr.NamedArguments)
+                .Any(static argument => argument.Key == "EnumStorage" && argument.Value.Value is int value && value == 1);
+
         private static bool IsSoftDelete(IPropertySymbol property)
             => property.GetAttributes().Any(static attr => attr.AttributeClass?.ToDisplayString() == "FlyAotOrm.DbSoftDeleteAttribute");
 
@@ -414,7 +421,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
         }
     }
 
-    private sealed record ColumnModel(string PropertyName, string ColumnName, string TypeName, bool IsKey, bool IsIdentity, bool IsNullable, bool IsSoftDelete, bool IsTenant);
+    private sealed record ColumnModel(string PropertyName, string ColumnName, string TypeName, bool IsKey, bool IsIdentity, bool IsNullable, bool IsSoftDelete, bool IsTenant, bool EnumAsString);
 
     private sealed record RepositoryModel(
         string Namespace,
@@ -1045,6 +1052,11 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
 
     private static class EntityEmitter
     {
+        private static string DatabaseValue(ColumnModel column, string expression)
+            => column.EnumAsString
+                ? $"global::FlyAotOrm.FlyDbValueConverter.ToDatabase({expression}, global::FlyAotOrm.DbEnumStorage.String)"
+                : expression;
+
         public static string Emit(EntityModel entity)
         {
             var builder = new StringBuilder();
@@ -1101,7 +1113,8 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
             builder.AppendLine("    {");
             foreach (var column in entity.Columns)
             {
-                builder.AppendLine($"        {column.PropertyName} = new global::FlyAotOrm.DbColumn<{column.TypeName}>(this, {Literal(column.ColumnName)}, isNullable: {ToCSharpBool(column.IsNullable)});");
+                var enumStorage = column.EnumAsString ? ", enumStorage: global::FlyAotOrm.DbEnumStorage.String" : "";
+                builder.AppendLine($"        {column.PropertyName} = new global::FlyAotOrm.DbColumn<{column.TypeName}>(this, {Literal(column.ColumnName)}, isNullable: {ToCSharpBool(column.IsNullable)}{enumStorage});");
             }
             builder.AppendLine("    }");
             builder.AppendLine();
@@ -1215,7 +1228,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
             builder.AppendLine($"    public static async global::System.Threading.Tasks.Task<{entity.FullTypeName}?> GetByIdAsync(global::System.Data.Common.DbConnection connection, {key.TypeName} {ToParameterName(key.PropertyName)}, global::FlyAotOrm.DbDialectKind dialect, global::System.Data.Common.DbTransaction? transaction = null, global::System.Threading.CancellationToken cancellationToken = default)");
             builder.AppendLine("    {");
             builder.AppendLine("        await using var command = CreateCommand(connection, transaction, GetSelectByIdSql(dialect));");
-            builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, {ToParameterName(key.PropertyName)});");
+            builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, {DatabaseValue(key, ToParameterName(key.PropertyName))});");
             builder.AppendLine("        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);");
             builder.AppendLine($"        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? {entity.TypeName}Table.Materialize(reader) : null;");
             builder.AppendLine("    }");
@@ -1246,7 +1259,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
             builder.AppendLine("    public static async global::System.Threading.Tasks.Task<bool> ExistsAsync(global::System.Data.Common.DbConnection connection, " + key.TypeName + " " + ToParameterName(key.PropertyName) + ", global::FlyAotOrm.DbDialectKind dialect, global::System.Data.Common.DbTransaction? transaction = null, global::System.Threading.CancellationToken cancellationToken = default)");
             builder.AppendLine("    {");
             builder.AppendLine("        await using var command = CreateCommand(connection, transaction, GetExistsSql(dialect));");
-            builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, {ToParameterName(key.PropertyName)});");
+            builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, {DatabaseValue(key, ToParameterName(key.PropertyName))});");
             builder.AppendLine("        var exists = await ExecuteInt64ScalarAsync(command, cancellationToken).ConfigureAwait(false);");
             builder.AppendLine("        return exists != 0;");
             builder.AppendLine("    }");
@@ -1270,7 +1283,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
             builder.AppendLine($"    public static async global::System.Threading.Tasks.Task<int> DeleteByIdAsync(global::System.Data.Common.DbConnection connection, {key.TypeName} {ToParameterName(key.PropertyName)}, global::FlyAotOrm.DbDialectKind dialect, global::System.Data.Common.DbTransaction? transaction = null, global::System.Threading.CancellationToken cancellationToken = default)");
             builder.AppendLine("    {");
             builder.AppendLine("        await using var command = CreateCommand(connection, transaction, GetDeleteByIdSql(dialect));");
-            builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, {ToParameterName(key.PropertyName)});");
+            builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, {DatabaseValue(key, ToParameterName(key.PropertyName))});");
             builder.AppendLine("        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);");
             builder.AppendLine("    }");
             if (insertColumns.Length > 0)
@@ -1286,7 +1299,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                 builder.AppendLine("        await using var command = CreateCommand(connection, transaction, GetInsertSql(dialect));");
                 foreach (var column in insertColumns)
                 {
-                    builder.AppendLine($"        AddParameter(command, {Literal(column.PropertyName)}, entity.{column.PropertyName});");
+                    builder.AppendLine($"        AddParameter(command, {Literal(column.PropertyName)}, {DatabaseValue(column, "entity." + column.PropertyName)});");
                 }
                 builder.AppendLine("        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);");
                 builder.AppendLine("    }");
@@ -1301,7 +1314,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                 builder.AppendLine("        await using var command = CreateCommand(connection, transaction, GetInsertReturningSql(dialect));");
                 foreach (var column in insertColumns)
                 {
-                    builder.AppendLine($"        AddParameter(command, {Literal(column.PropertyName)}, entity.{column.PropertyName});");
+                    builder.AppendLine($"        AddParameter(command, {Literal(column.PropertyName)}, {DatabaseValue(column, "entity." + column.PropertyName)});");
                 }
                 builder.AppendLine("        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);");
                 builder.AppendLine("        if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))");
@@ -1325,9 +1338,9 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                 builder.AppendLine("        await using var command = CreateCommand(connection, transaction, GetUpdateSql(dialect));");
                 foreach (var column in updateColumns)
                 {
-                    builder.AppendLine($"        AddParameter(command, {Literal(column.PropertyName)}, entity.{column.PropertyName});");
+                    builder.AppendLine($"        AddParameter(command, {Literal(column.PropertyName)}, {DatabaseValue(column, "entity." + column.PropertyName)});");
                 }
-                builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, entity.{key.PropertyName});");
+                builder.AppendLine($"        AddParameter(command, {Literal(key.PropertyName)}, {DatabaseValue(key, "entity." + key.PropertyName)});");
                 builder.AppendLine("        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);");
                 builder.AppendLine("    }");
             }

@@ -3,10 +3,16 @@ namespace FlyAotOrm;
 public sealed class DbColumn<T>
 {
     public DbColumn(DbTable table, string columnName, bool isNullable = false)
+        : this(table, columnName, isNullable, DbEnumStorage.Number)
+    {
+    }
+
+    public DbColumn(DbTable table, string columnName, bool isNullable, DbEnumStorage enumStorage)
     {
         Table = table;
         ColumnName = columnName;
         IsNullable = isNullable;
+        EnumStorage = enumStorage;
     }
 
     public DbTable Table { get; }
@@ -14,6 +20,8 @@ public sealed class DbColumn<T>
     public string ColumnName { get; }
 
     public bool IsNullable { get; }
+
+    public DbEnumStorage EnumStorage { get; }
 
     public ColumnExpression ToExpression() => new(Table.Alias, ColumnName);
 
@@ -53,11 +61,11 @@ public sealed class DbColumn<T>
 
     public SqlCondition Contains(string value) => Like("%" + value + "%");
 
-    public SqlCondition In(params T[] values) => new InCondition(ToExpression(), values.Cast<object?>().ToArray());
+    public SqlCondition In(params T[] values) => In((IEnumerable<T>)values);
 
-    public SqlCondition In(IEnumerable<T> values) => new InCondition(ToExpression(), values.Cast<object?>().ToArray());
+    public SqlCondition In(IEnumerable<T> values) => new InCondition(ToExpression(), values.Select(ToConditionValue).ToArray());
 
-    public SqlCondition Between(T lower, T upper) => new BetweenCondition(ToExpression(), lower, upper);
+    public SqlCondition Between(T lower, T upper) => new BetweenCondition(ToExpression(), ToConditionValue(lower), ToConditionValue(upper));
 
     public SqlCondition IsNull() => new NullCondition(ToExpression(), IsNot: false);
 
@@ -70,7 +78,12 @@ public sealed class DbColumn<T>
     public SelectedColumn As(string alias) => new(ToExpression(), alias);
 
     private SqlCondition Compare(string op, T value)
-        => new BinaryCondition(ToExpression(), op, new ValueExpression(value));
+        => new BinaryCondition(ToExpression(), op, new ValueExpression(ToConditionValue(value)));
+
+    private object? ToConditionValue(T value)
+        => EnumStorage == DbEnumStorage.String
+            ? FlyDbValueConverter.ToDatabase(value, EnumStorage)
+            : value;
 
     private SqlCondition Compare(string op, DbColumn<T> column)
         => new BinaryCondition(ToExpression(), op, column.ToExpression());

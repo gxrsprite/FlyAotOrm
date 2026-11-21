@@ -23,6 +23,8 @@ public sealed partial class User
 
 Use `[DbSoftDelete]` on a `bool` deletion flag when generated `FlyDbContext` and repository `Query<TEntity>` entry points should exclude deleted rows by default. Handwritten `[SqlQuery]` SQL is not rewritten.
 
+Enums use numeric storage by default. Use `[DbColumn("status", EnumStorage = DbEnumStorage.String)]` for enum-name storage. Generated CRUD and column predicates follow this setting; reads accept both numeric values and case-sensitive names, including nullable enums. Handwritten SQL parameters have no column context: pass a string for a text enum column. Changing storage does not migrate existing data.
+
 Use `[DbTenant]` on a tenant id column when generated query entry points should filter by the current tenant:
 
 ```csharp

@@ -29,6 +29,7 @@ It is not intended for large database-centric business systems and does not prov
 - 通过 `[DbTable]`、`[DbColumn]`、`[DbKey]` 生成表、列、实体映射和固定 CRUD。
 - Typed Query DSL：条件、排序、分页、Count / Any，以及显式 DTO Join 投影。
 - 生成 `FlyDbContext` 和 Repository，支持软删除、租户及自定义默认查询过滤器。
+- 枚举列默认按底层数字存储；`[DbColumn("col", EnumStorage = DbEnumStorage.String)]` 改为名称存储，生成 CRUD 与查询条件按列配置执行，读取兼容数字与名称。
 - SQL 与参数可检查；默认参数化，可用 `InlineParameters()` 按支持的类型内联值。
 - 提供 SQLite、PostgreSQL、MySQL、SQL Server 和 NovaDb 方言；具体用法及限制见 API 文档。
 - 无 Dapper / DapperAOT 依赖；无法生成映射时提供编译诊断，不回退到运行时反射映射。

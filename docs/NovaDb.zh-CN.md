@@ -141,9 +141,10 @@ DATEADD / DATE_FORMAT / DATEDIFF`。901 缺少的 `LOCATE/CHAR_LENGTH/UTC_TIMEST
 
 ## 跨 ORM 约定差异（重要）
 
-- **枚举**：FlyAotOrm 存底层整数，WebdavSharp 的 FreeSql 分支存 `'Name'`
-  字符串（MySQL `ENUM` 语义）。Nova 列本身只是 `INT`/`STRING`，
-  读出来对不上——**同一张表的枚举列只允许一个 ORM 读写**。
+- **枚举**：FlyAotOrm 默认存底层整数；用
+  `[DbColumn(..., EnumStorage = DbEnumStorage.String)]` 可改存枚举名称，
+  与 WebdavSharp 的 FreeSql 分支（MySQL `ENUM` 语义存 `'Name'`）对齐。
+  两种模式按列独立配置，读取兼容数字与名称；同一张表混用时逐列指定即可。
 - **字符串长度**：1120 起 `STRING(n)` 是真约束，实体/DDL 里的长度两边必须一致；
   超长由服务端抛 `ConstraintViolation`。
 - **注释**：FreeSql 分支会读写列/表 `COMMENT`，FlyAotOrm 不做迁移、不碰注释。

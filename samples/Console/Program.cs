@@ -125,6 +125,22 @@ Console.WriteLine($"Has active orders: {hasActiveOrders}");
 Console.WriteLine($"First user order: {firstUserOrder?.OrderId}");
 Console.WriteLine($"First active user: {activeUsers[0].Name}");
 
+await ExecuteAsync(connection, "create table enum_storage_smoke (id integer primary key, number integer, text text)");
+await EnumSmokeCrud.InsertAsync(connection, new EnumSmoke { Id = 1, Number = UserStatus.Active, Text = UserStatus.Active });
+var enumRow = await db.Select(Tables.EnumSmoke)
+    .Where(Tables.EnumSmoke.Text.Eq(UserStatus.Active))
+    .FirstOrDefaultAsync();
+await using (var enumCommand = connection.CreateCommand())
+{
+    enumCommand.CommandText = "select text from enum_storage_smoke";
+    if (await enumCommand.ExecuteScalarAsync() as string != "Active" ||
+        enumRow?.Number != UserStatus.Active || enumRow.Text != UserStatus.Active)
+    {
+        throw new InvalidOperationException("Enum storage smoke failed.");
+    }
+}
+Console.WriteLine("Enum storage: number + string passed");
+
 static async Task ExecuteAsync(System.Data.Common.DbConnection connection, string sql)
 {
     await using var command = connection.CreateCommand();
@@ -173,6 +189,20 @@ public enum UserStatus
 {
     Disabled = 0,
     Active = 1
+}
+
+[DbTable("enum_storage_smoke")]
+public sealed partial class EnumSmoke
+{
+    [DbKey(IsIdentity = false)]
+    [DbColumn("id")]
+    public long Id { get; set; }
+
+    [DbColumn("number")]
+    public UserStatus? Number { get; set; }
+
+    [DbColumn("text", EnumStorage = DbEnumStorage.String)]
+    public UserStatus? Text { get; set; }
 }
 
 public sealed class UserOrderRow

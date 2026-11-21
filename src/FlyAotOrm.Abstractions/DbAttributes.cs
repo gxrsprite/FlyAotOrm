@@ -16,6 +16,14 @@ public sealed class DbColumnAttribute : Attribute
     public DbColumnAttribute(string name) => Name = name;
 
     public string Name { get; }
+
+    public DbEnumStorage EnumStorage { get; init; } = DbEnumStorage.Number;
+}
+
+public enum DbEnumStorage
+{
+    Number = 0,
+    String = 1
 }
 
 [AttributeUsage(AttributeTargets.Property, Inherited = false)]

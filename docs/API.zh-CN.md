@@ -46,6 +46,24 @@ public sealed partial class User
 - 实体 materializer
 - `FlyDbContext.{Entities}` 查询入口
 
+## 枚举存储
+
+枚举默认按底层数字写入，兼容已有行为；需要保存枚举名称时，在列上指定存储方式：
+
+```csharp
+[DbColumn("status_code")]
+public UserStatus StatusCode { get; set; }
+
+[DbColumn("status_name", EnumStorage = DbEnumStorage.String)]
+public UserStatus? StatusName { get; set; }
+```
+
+`DbEnumStorage.Number` 写入枚举底层数字；`DbEnumStorage.String` 写入名称（例如 `Active`）。可空枚举的 `null` 写入数据库 NULL。读取兼容数字、名称及数字字符串，名称区分大小写，无效名称会抛出异常；Flags 枚举支持 `Read, Write` 形式，未命名枚举值按数字文本保存，不使用 `Description` / `EnumMember` 的自定义名称。
+
+生成的 CRUD（包括枚举主键）与列的值比较、`In`、`Between`、内联参数遵循该列配置；字符串列的排序和范围比较遵循数据库字符串排序规则，而非枚举数值顺序。两种存储方式对应的数据库列类型应分别使用数字与文本类型。
+
+手写 Repository SQL 的参数没有实体列上下文，枚举参数仍默认按数字绑定；查询文本枚举列时使用字符串参数（如 `status.ToString()`）。实体、DTO、`SqlScalar` 的枚举结果均支持两种读取方式。修改列配置不会自动迁移已有数据库结构或数据。
+
 ## 创建 FlyDb
 
 普通代码优先使用 `DbDialectKind`：
