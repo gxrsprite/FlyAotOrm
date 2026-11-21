@@ -7,7 +7,7 @@
 实测基线：**`NewLife.NovaDb 1.0.2026.1121-beta0244`**（2026-11-21 构建），
 嵌入模式。早期 901 基线的适配由 `NovaDbRenderer` 的兼容层保留，
 当前基线由本仓 `NovaDbLiveTests`（真库）+ WebdavSharp 实战共同锁定。
-上游变更与版本选择见 [WebdavSharp 的 docs/novadb.md](../../Server/WebdavSharp/docs/novadb.md)。
+上游变更与版本选择见 [WebdavSharp 的 docs/novadb.md](https://github.com/gxrsprite/WebdavSharpServer/blob/main/docs/novadb.md)。
 
 > 版本选择：1024 稳定版不含 MySQL 方言兼容修复；1120-beta 包含 master 上
 > 11/20 那批提交（`LIMIT m,n`、`库.表`、BIT、`LOCATE/CHAR_LENGTH`、
