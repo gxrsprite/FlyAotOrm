@@ -1,13 +1,12 @@
 # 更新记录
 
-## 未发布
+## 1.0.0
 
 - 枚举列支持 `DbEnumStorage.Number`（默认）和 `DbEnumStorage.String`，覆盖生成 CRUD、查询条件与内联参数。
 - 枚举读取兼容数字、名称、数字字符串和可空值；NativeAOT 示例增加两种存储方式的读写验证。
+- NovaDb 方言适配到 `NewLife.NovaDb 1.0.2026.1121-beta0244`（索引/LIMIT 下推、反斜杠字面量转义）。
 
-## 1.0.0
-
-首个正式版本，面向数据库访问相对直接、需要 NativeAOT 的工具类和小型应用。NuGet 是否上线以实际上传结果为准。
+首个正式版本，面向数据库访问相对直接、需要 NativeAOT 的工具类和小型应用。已发布到 nuget.org：`FlyAotOrm.Abstractions`、`FlyAotOrm.Core`、`FlyAotOrm.Generator` 1.0.0。
 
 - 提供生成的实体/DTO 映射、固定 CRUD、typed Query DSL、Repository 和默认查询过滤器。
 - 提供 SQLite、PostgreSQL、MySQL、SQL Server 和 NovaDb 方言渲染。
