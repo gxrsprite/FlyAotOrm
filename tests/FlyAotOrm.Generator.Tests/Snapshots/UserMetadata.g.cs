@@ -107,6 +107,7 @@ public static class UserCrud
     private const string NovaDbInsertSql = "insert into `users` (`name`, `email`) values (@Name, @Email)";
     private const string SqliteInsertReturningSql = "insert into \"users\" (\"name\", \"email\") values (@Name, @Email) returning \"id\" as \"Id\", \"name\" as \"Name\", \"email\" as \"Email\"";
     private const string SqlServerInsertReturningSql = "insert into [users] ([name], [email]) output inserted.[id] as [Id], inserted.[name] as [Name], inserted.[email] as [Email] values (@Name, @Email)";
+    private const string MySqlInsertReturningSql = "insert into `users` (`name`, `email`) values (@Name, @Email); select `id` as `Id`, `name` as `Name`, `email` as `Email` from `users` where `id` = last_insert_id()";
     private const string SqliteUpdateSql = "update \"users\" set \"name\" = @Name, \"email\" = @Email where \"id\" = @Id";
     private const string SqlServerUpdateSql = "update [users] set [name] = @Name, [email] = @Email where [id] = @Id";
     private const string MySqlUpdateSql = "update `users` set `name` = @Name, `email` = @Email where `id` = @Id";
@@ -278,7 +279,8 @@ public static class UserCrud
         global::FlyAotOrm.DbDialectKind.Sqlite => SqliteInsertReturningSql,
         global::FlyAotOrm.DbDialectKind.PostgreSql => SqliteInsertReturningSql,
         global::FlyAotOrm.DbDialectKind.SqlServer => SqlServerInsertReturningSql,
-        _ => throw new global::System.NotSupportedException("InsertReturningAsync is currently generated only for SQLite, PostgreSQL and SQL Server."),
+        global::FlyAotOrm.DbDialectKind.MySql => MySqlInsertReturningSql,
+        _ => throw new global::System.NotSupportedException("InsertReturningAsync is currently generated only for SQLite, PostgreSQL, SQL Server and MySQL."),
     };
 
     private static string GetUpdateSql(global::FlyAotOrm.DbDialectKind dialect) => dialect switch

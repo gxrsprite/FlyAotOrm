@@ -1213,6 +1213,12 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                 builder.AppendLine($"    private const string NovaDbInsertSql = {Literal($"insert into {QuoteNovaDb(entity.TableName)} ({novaDbInsertColumnNames}) values ({insertParameterNames})")};");
                 builder.AppendLine($"    private const string SqliteInsertReturningSql = {Literal($"insert into {QuoteSqlite(entity.TableName)} ({sqliteInsertColumnNames}) values ({insertParameterNames}) returning {sqliteSelectableColumns}")};");
                 builder.AppendLine($"    private const string SqlServerInsertReturningSql = {Literal($"insert into {QuoteSqlServer(entity.TableName)} ({sqlServerInsertColumnNames}) output {sqlServerOutputColumns} values ({insertParameterNames})")};");
+                // MySQL has no RETURNING: pair INSERT with a second SELECT in one command.
+                // Identity keys use LAST_INSERT_ID(); assigned keys reuse the bound key parameter.
+                var mySqlReturningKey = key.IsIdentity
+                    ? "last_insert_id()"
+                    : "@" + key.PropertyName;
+                builder.AppendLine($"    private const string MySqlInsertReturningSql = {Literal($"insert into {QuoteMySql(entity.TableName)} ({mySqlInsertColumnNames}) values ({insertParameterNames}); select {mySqlSelectableColumns} from {QuoteMySql(entity.TableName)} where {QuoteMySql(key.ColumnName)} = {mySqlReturningKey}")};");
             }
             if (updateColumns.Length > 0)
             {
@@ -1402,7 +1408,8 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                 builder.AppendLine("        global::FlyAotOrm.DbDialectKind.Sqlite => SqliteInsertReturningSql,");
                 builder.AppendLine("        global::FlyAotOrm.DbDialectKind.PostgreSql => SqliteInsertReturningSql,");
                 builder.AppendLine("        global::FlyAotOrm.DbDialectKind.SqlServer => SqlServerInsertReturningSql,");
-                builder.AppendLine("        _ => throw new global::System.NotSupportedException(\"InsertReturningAsync is currently generated only for SQLite, PostgreSQL and SQL Server.\"),");
+                builder.AppendLine("        global::FlyAotOrm.DbDialectKind.MySql => MySqlInsertReturningSql,");
+                builder.AppendLine("        _ => throw new global::System.NotSupportedException(\"InsertReturningAsync is currently generated only for SQLite, PostgreSQL, SQL Server and MySQL.\"),");
                 builder.AppendLine("    };");
             }
             if (updateColumns.Length > 0)

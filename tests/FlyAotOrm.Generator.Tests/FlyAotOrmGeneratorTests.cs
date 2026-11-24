@@ -64,7 +64,10 @@ public partial class User
         Assert.Contains("returning \\\"id\\\" as \\\"Id\\\", \\\"name\\\" as \\\"Name\\\", \\\"email\\\" as \\\"Email\\\"", text);
         Assert.Contains("output inserted.[id] as [Id], inserted.[name] as [Name], inserted.[email] as [Email]", text);
         Assert.Contains("global::FlyAotOrm.DbDialectKind.SqlServer => SqlServerInsertReturningSql", text);
-        Assert.Contains("InsertReturningAsync is currently generated only for SQLite, PostgreSQL and SQL Server.", text);
+        Assert.Contains("private const string MySqlInsertReturningSql", text);
+        Assert.Contains("where `id` = last_insert_id()", text);
+        Assert.Contains("global::FlyAotOrm.DbDialectKind.MySql => MySqlInsertReturningSql", text);
+        Assert.Contains("InsertReturningAsync is currently generated only for SQLite, PostgreSQL, SQL Server and MySQL.", text);
         Assert.Contains("DbConnection connection", text);
         Assert.Contains("ExecuteNonQueryAsync", text);
         Assert.Contains("UserTable.Materialize(reader)", text);

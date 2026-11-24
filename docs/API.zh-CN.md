@@ -237,7 +237,7 @@ var rows = await UserCrud.ListAllAsync(connection);
 await UserCrud.InsertAsync(connection, user, DbDialectKind.SqlServer);
 ```
 
-`InsertReturningAsync` 支持 SQLite、PostgreSQL 和 SQL Server（`OUTPUT INSERTED` 一次往返返回主键与全部列）。NovaDb 和 MySQL 请用 `InsertAsync` + `GetByIdAsync`（详见 [NovaDb 适配说明](NovaDb.zh-CN.md)、[SQL Server 适配说明](SqlServer.zh-CN.md))。
+`InsertReturningAsync` 支持 SQLite、PostgreSQL、SQL Server（`OUTPUT INSERTED`）和 MySQL（INSERT + LAST_INSERT_ID() 多语句，需 MySqlConnector 允许多语句）。NovaDb 请用 `InsertAsync` + `GetByIdAsync`（详见 [NovaDb 适配说明](NovaDb.zh-CN.md)、[SQL Server 适配说明](SqlServer.zh-CN.md)、[MySQL 适配说明](MySql.zh-CN.md))。
 
 ## FlyDbContext
 
