@@ -1168,6 +1168,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
             var updateColumns = entity.Columns.Where(static column => !column.IsKey && !column.IsIdentity).ToArray();
             var sqliteSelectableColumns = string.Join(", ", entity.Columns.Select(static column => $"{QuoteSqlite(column.ColumnName)} as {QuoteSqlite(column.PropertyName)}"));
             var sqlServerSelectableColumns = string.Join(", ", entity.Columns.Select(static column => $"{QuoteSqlServer(column.ColumnName)} as {QuoteSqlServer(column.PropertyName)}"));
+            var sqlServerOutputColumns = string.Join(", ", entity.Columns.Select(static column => $"inserted.{QuoteSqlServer(column.ColumnName)} as {QuoteSqlServer(column.PropertyName)}"));
             var mySqlSelectableColumns = string.Join(", ", entity.Columns.Select(static column => $"{QuoteMySql(column.ColumnName)} as {QuoteMySql(column.PropertyName)}"));
             var novaDbSelectableColumns = string.Join(", ", entity.Columns.Select(static column => $"{QuoteNovaDb(column.ColumnName)} as {QuoteNovaDb(column.PropertyName)}"));
             var sqliteInsertColumnNames = string.Join(", ", insertColumns.Select(static column => QuoteSqlite(column.ColumnName)));
@@ -1211,6 +1212,7 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                 builder.AppendLine($"    private const string MySqlInsertSql = {Literal($"insert into {QuoteMySql(entity.TableName)} ({mySqlInsertColumnNames}) values ({insertParameterNames})")};");
                 builder.AppendLine($"    private const string NovaDbInsertSql = {Literal($"insert into {QuoteNovaDb(entity.TableName)} ({novaDbInsertColumnNames}) values ({insertParameterNames})")};");
                 builder.AppendLine($"    private const string SqliteInsertReturningSql = {Literal($"insert into {QuoteSqlite(entity.TableName)} ({sqliteInsertColumnNames}) values ({insertParameterNames}) returning {sqliteSelectableColumns}")};");
+                builder.AppendLine($"    private const string SqlServerInsertReturningSql = {Literal($"insert into {QuoteSqlServer(entity.TableName)} ({sqlServerInsertColumnNames}) output {sqlServerOutputColumns} values ({insertParameterNames})")};");
             }
             if (updateColumns.Length > 0)
             {
@@ -1399,7 +1401,8 @@ public sealed class FlyAotOrmGenerator : IIncrementalGenerator
                 builder.AppendLine("    {");
                 builder.AppendLine("        global::FlyAotOrm.DbDialectKind.Sqlite => SqliteInsertReturningSql,");
                 builder.AppendLine("        global::FlyAotOrm.DbDialectKind.PostgreSql => SqliteInsertReturningSql,");
-                builder.AppendLine("        _ => throw new global::System.NotSupportedException(\"InsertReturningAsync is currently generated only for SQLite and PostgreSQL.\"),");
+                builder.AppendLine("        global::FlyAotOrm.DbDialectKind.SqlServer => SqlServerInsertReturningSql,");
+                builder.AppendLine("        _ => throw new global::System.NotSupportedException(\"InsertReturningAsync is currently generated only for SQLite, PostgreSQL and SQL Server.\"),");
                 builder.AppendLine("    };");
             }
             if (updateColumns.Length > 0)

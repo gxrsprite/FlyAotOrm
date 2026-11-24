@@ -1,5 +1,10 @@
 # 更新记录
 
+## 未发布
+
+- 库原生多目标 `net8.0` / `net10.0` / `net11.0`；生成器保持 `netstandard2.0`。三 TFM 均通过全量测试。
+- SQL Server 生成 CRUD 的 `InsertReturningAsync` 改用 `OUTPUT INSERTED`，一次往返返回主键与全部列；新增真库集成测试（`FLYAOTORM_TEST_SQLSERVER`，未配置时跳过）与 [SQL Server 适配说明](docs/SqlServer.zh-CN.md)。
+
 ## 1.0.0
 
 - 枚举列支持 `DbEnumStorage.Number`（默认）和 `DbEnumStorage.String`，覆盖生成 CRUD、查询条件与内联参数。

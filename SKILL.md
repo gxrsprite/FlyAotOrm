@@ -141,7 +141,7 @@ await UserCrud.InsertAsync(connection, user, DbDialectKind.SqlServer);
 await UserCrud.InsertAsync(novaConnection, user, DbDialectKind.NovaDb);
 ```
 
-`InsertReturningAsync` is generated for SQLite and PostgreSQL only. NovaDb does not support it; use `InsertAsync` followed by `GetByIdAsync` with an application-assigned key.
+`InsertReturningAsync` is generated for SQLite, PostgreSQL and SQL Server (via `OUTPUT INSERTED`). NovaDb and MySQL do not support it; use `InsertAsync` followed by `GetByIdAsync` with an application-assigned key.
 
 Generated `ExistsAsync` should use an `exists` SQL shape instead of `count(1)` when only existence is needed.
 

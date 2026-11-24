@@ -109,8 +109,9 @@ Beta 完成前应保持以下命令通过：
 ```powershell
 dotnet test FlyAotOrm.slnx --no-restore /p:UseSharedCompilation=false
 dotnet build FlyAotOrm.slnx --no-restore /p:UseSharedCompilation=false
-dotnet publish samples\Console\FlyAotOrm.ConsoleSample.csproj -c Release -r win-x64 --no-restore /p:UseSharedCompilation=false
+dotnet publish samples\Console\FlyAotOrm.ConsoleSample.csproj -c Release -f net8.0 -r win-x64 --no-restore /p:UseSharedCompilation=false
 samples\Console\bin\Release\net8.0\win-x64\publish\FlyAotOrm.ConsoleSample.exe
+:: 同样可对 net10.0 / net11.0 重复上面两条命令（替换 -f 与路径中的 TFM）
 dotnet pack FlyAotOrm.slnx -c Release --no-restore /p:UseSharedCompilation=false
 ```
 

@@ -62,7 +62,9 @@ public partial class User
         Assert.Contains("select case when exists (select 1 from \\\"users\\\" where \\\"id\\\" = @Id) then 1 else 0 end", text);
         Assert.Contains("InsertReturningAsync", text);
         Assert.Contains("returning \\\"id\\\" as \\\"Id\\\", \\\"name\\\" as \\\"Name\\\", \\\"email\\\" as \\\"Email\\\"", text);
-        Assert.Contains("InsertReturningAsync is currently generated only for SQLite and PostgreSQL.", text);
+        Assert.Contains("output inserted.[id] as [Id], inserted.[name] as [Name], inserted.[email] as [Email]", text);
+        Assert.Contains("global::FlyAotOrm.DbDialectKind.SqlServer => SqlServerInsertReturningSql", text);
+        Assert.Contains("InsertReturningAsync is currently generated only for SQLite, PostgreSQL and SQL Server.", text);
         Assert.Contains("DbConnection connection", text);
         Assert.Contains("ExecuteNonQueryAsync", text);
         Assert.Contains("UserTable.Materialize(reader)", text);

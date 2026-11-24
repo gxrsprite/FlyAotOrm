@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
 using Npgsql;
 
@@ -430,6 +431,62 @@ create table generated_users (
         finally
         {
             await ExecuteAsync(connection, "drop table if exists generated_users;");
+        }
+    }
+
+    [ExternalDatabaseFact("FLYAOTORM_TEST_SQLSERVER")]
+    public async Task GeneratedCrudExecutesAgainstSqlServerWhenLocalServerIsAvailable()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("FLYAOTORM_TEST_SQLSERVER")!;
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        try
+        {
+            await ExecuteAsync(connection, """
+if object_id('dbo.generated_users', 'U') is not null
+    drop table dbo.generated_users;
+
+create table dbo.generated_users (
+    id bigint not null identity(1,1) primary key,
+    name nvarchar(100) not null,
+    created_at datetime2 not null
+);
+""");
+
+            await GeneratedUserCrud.InsertAsync(
+                connection,
+                new GeneratedUser { Name = "alice", CreatedAt = new DateTime(2026, 1, 1) },
+                DbDialectKind.SqlServer);
+
+            var user = await GeneratedUserCrud.GetByIdAsync(connection, 1, DbDialectKind.SqlServer);
+            Assert.NotNull(user);
+            Assert.Equal("alice", user.Name);
+
+            user.Name = "alice-updated";
+            Assert.Equal(1, await GeneratedUserCrud.UpdateAsync(connection, user, DbDialectKind.SqlServer));
+
+            // OUTPUT INSERTED returns identity key + all columns back in one round-trip.
+            var returned = await GeneratedUserCrud.InsertReturningAsync(
+                connection,
+                new GeneratedUser { Name = "bob", CreatedAt = new DateTime(2026, 1, 2) },
+                DbDialectKind.SqlServer);
+            Assert.Equal(2, returned.Id);
+            Assert.Equal("bob", returned.Name);
+
+            var all = await GeneratedUserCrud.ListAllAsync(connection, DbDialectKind.SqlServer);
+            Assert.Equal(new[] { "alice-updated", "bob" }, all.Select(static item => item.Name).ToArray());
+
+            Assert.True(await GeneratedUserCrud.ExistsAsync(connection, 1, DbDialectKind.SqlServer));
+            Assert.Equal(2, await GeneratedUserCrud.CountAsync(connection, DbDialectKind.SqlServer));
+
+            Assert.Equal(1, await GeneratedUserCrud.DeleteByIdAsync(connection, 1, DbDialectKind.SqlServer));
+            Assert.False(await GeneratedUserCrud.ExistsAsync(connection, 1, DbDialectKind.SqlServer));
+        }
+        finally
+        {
+            await ExecuteAsync(connection, "if object_id('dbo.generated_users', 'U') is not null drop table dbo.generated_users;");
         }
     }
 

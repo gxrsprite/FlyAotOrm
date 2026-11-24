@@ -17,8 +17,9 @@ uses .NET 8 to verify the supported compiler baseline:
 ```powershell
 dotnet --version
 dotnet run -c Release
-dotnet publish -c Release -r win-x64
+dotnet publish -c Release -f net8.0 -r win-x64
 ./bin/Release/net8.0/win-x64/publish/PackageSmoke.exe
+# 同样可对 net10.0 / net11.0 重复（替换 -f 与路径中的 TFM）
 ```
 
 Keep this project outside the main solution: its package dependencies require

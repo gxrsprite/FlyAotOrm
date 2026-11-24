@@ -42,7 +42,7 @@ Entity -> Source Generator -> Table/Column -> Query DSL -> SQL AST -> Renderer -
 
 ## 安装
 
-目标框架为 .NET 8 或更高，生成器支持 .NET 8 SDK 的 Roslyn 4.8 及以上编译器。NuGet 发布完成后，在应用项目中引用：
+库原生多目标 `net8.0` / `net10.0` / `net11.0`，生成器为 `netstandard2.0`（兼容 .NET 8 SDK 的 Roslyn 4.8 及以上编译器）。NuGet 发布完成后，在应用项目中引用：
 
 ```xml
 <PackageReference Include="FlyAotOrm.Core" Version="1.0.0" />
@@ -92,6 +92,7 @@ var rows = await db
 - [AI 使用指引](SKILL.md)
 - [控制台示例](samples/Console/Program.cs)
 - [NovaDb 适配说明](docs/NovaDb.zh-CN.md)
+- [SQL Server 适配说明](docs/SqlServer.zh-CN.md)
 - [打包说明](docs/PACKAGING.zh-CN.md)
 - [更新记录](CHANGELOG.md)
 - [开发计划与发布准备](PLAN.md)
