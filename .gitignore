@@ -4,6 +4,7 @@
 /.idea/
 /.codex/
 /.agents/
+/.playwright-cli/
 /temp/
 /artifacts/
 /TestResults/
