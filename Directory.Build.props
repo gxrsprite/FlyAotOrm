@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>FlyAotOrm contributors</Authors>
     <Company>FlyAotOrm</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>

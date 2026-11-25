@@ -87,7 +87,7 @@ var one = await UserCrud.GetByIdAsync(conn, id, DbDialectKind.NovaDb);
 ```
 
 生成 CRUD 已有 `NovaDbXxxSql` 常量并接入各 `GetXxxSql(dialect)` 开关
-（反引号；`InsertReturningAsync` 仅 SQLite/PostgreSQL，Nova 请
+（反引号；`InsertReturningAsync` 仅 SQLite/PostgreSQL/SQL Server/MySQL，Nova 请
 `InsertAsync` + `GetByIdAsync`）。
 
 ### 渲染分化点（`NovaDbRenderer`，逐条真库验证）
@@ -151,7 +151,7 @@ DATEADD / DATE_FORMAT / DATEDIFF`。901 缺少的 `LOCATE/CHAR_LENGTH/UTC_TIMEST
 
 ## 已知限制
 
-1. `InsertReturningAsync` 仅 SQLite/PostgreSQL（见上）。
+1. `InsertReturningAsync` 仅 SQLite/PostgreSQL/SQL Server/MySQL（见上）。
 2. 复合主键不支持（1120 明确报错，用代理主键 + 唯一索引）。
 3. 时序/MQ/KV 三引擎走 `NovaClient` RPC 或同库 `ENGINE=FLUX/KV` 表，
    不在 FlyAotOrm 关系路径内，需要时直写 SQL。

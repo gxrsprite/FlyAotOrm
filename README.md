@@ -45,8 +45,8 @@ Entity -> Source Generator -> Table/Column -> Query DSL -> SQL AST -> Renderer -
 库原生多目标 `net8.0` / `net10.0` / `net11.0`，生成器为 `netstandard2.0`（兼容 .NET 8 SDK 的 Roslyn 4.8 及以上编译器）。NuGet 发布完成后，在应用项目中引用：
 
 ```xml
-<PackageReference Include="FlyAotOrm.Core" Version="1.0.0" />
-<PackageReference Include="FlyAotOrm.Generator" Version="1.0.0" PrivateAssets="all" />
+<PackageReference Include="FlyAotOrm.Core" Version="1.1.0" />
+<PackageReference Include="FlyAotOrm.Generator" Version="1.1.0" PrivateAssets="all" />
 ```
 
 Core 会传递引用 Abstractions。数据库驱动由应用自行安装，驱动的 NativeAOT 兼容性需要单独确认。

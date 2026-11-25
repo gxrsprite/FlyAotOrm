@@ -1,9 +1,9 @@
 # 更新记录
 
-## 未发布
+## 1.1.0
 
 - 库原生多目标 `net8.0` / `net10.0` / `net11.0`；生成器保持 `netstandard2.0`。三 TFM 均通过全量测试。
-- SQL Server 生成 CRUD 的 `InsertReturningAsync` 改用 `OUTPUT INSERTED`，一次往返返回主键与全部列；新增真库集成测试（`FLYAOTORM_TEST_SQLSERVER`，未配置时跳过）与 [SQL Server 适配说明](docs/SqlServer.zh-CN.md)。
+- SQL Server 生成 CRUD 的 `InsertReturningAsync` 改用 `OUTPUT INSERTED`，一次往返返回主键与全部列；新增 `SqlServerLiveTests`（按 TFM 隔离库 `flyaotorm_test_net8/net10/net11`，覆盖 CRUD、identity/assigned `OUTPUT INSERTED`、保留字标识符、Query DSL 分页/Join 投影、`Guid`/`DateOnly`/`TimeOnly`/`DateTimeOffset` 与枚举存储）与 [SQL Server 适配说明](docs/SqlServer.zh-CN.md)；本地以 Microsoft SQL Server 2025 (RTM) + `Microsoft.Data.SqlClient 7.0.2` 三 TFM 实测通过。
 - MySQL 补齐真库测试与 `InsertReturningAsync`（多语句 INSERT + `LAST_INSERT_ID()`，identity/assigned 主键均覆盖），新增 [MySQL 适配说明](docs/MySql.zh-CN.md)；本地以 MySQL 8.4.9 + MySqlConnector 2.6.2 实测通过。
 
 ## 1.0.0

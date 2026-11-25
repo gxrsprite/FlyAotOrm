@@ -28,7 +28,7 @@ dotnet pack FlyAotOrm.slnx -c Release /p:UseSharedCompilation=false
 ```powershell
 if (-not $env:NUGET_API_KEY) { throw "NUGET_API_KEY is required." }
 foreach ($name in 'Abstractions', 'Core', 'Generator') {
-    dotnet nuget push "artifacts/packages/FlyAotOrm.$name.1.0.0.nupkg" --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+    dotnet nuget push "artifacts/packages/FlyAotOrm.$name.1.1.0.nupkg" --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json
     if ($LASTEXITCODE -ne 0) { throw "Package push failed: $name" }
 }
 ```
@@ -57,7 +57,7 @@ foreach ($name in 'Abstractions', 'Core', 'Generator') {
 当前包版本在根目录 `Directory.Build.props` 中统一设置：
 
 ```xml
-<Version>1.0.0</Version>
+<Version>1.1.0</Version>
 ```
 
 ## 输出目录
@@ -93,9 +93,9 @@ dotnet pack src\FlyAotOrm.Generator\FlyAotOrm.Generator.csproj -c Release --no-r
 消费者项目通常需要引用：
 
 ```xml
-<PackageReference Include="FlyAotOrm.Abstractions" Version="1.0.0" />
-<PackageReference Include="FlyAotOrm.Core" Version="1.0.0" />
-<PackageReference Include="FlyAotOrm.Generator" Version="1.0.0" PrivateAssets="all" />
+<PackageReference Include="FlyAotOrm.Abstractions" Version="1.1.0" />
+<PackageReference Include="FlyAotOrm.Core" Version="1.1.0" />
+<PackageReference Include="FlyAotOrm.Generator" Version="1.1.0" PrivateAssets="all" />
 ```
 
 ## 发布前检查

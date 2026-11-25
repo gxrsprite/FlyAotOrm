@@ -1,5 +1,4 @@
 using Microsoft.Data.Sqlite;
-using Microsoft.Data.SqlClient;
 using Npgsql;
 
 namespace FlyAotOrm.Generator.Tests;
@@ -1133,50 +1132,6 @@ insert into users(id, name, created_at) values
         Assert.Equal(new long[] { 3, 1 }, rows.Select(static row => row.Id).ToArray());
     }
 
-    [ExternalDatabaseFact("FLYAOTORM_TEST_SQLSERVER")]
-    public async Task ExecutesSqlServerQueryDslWhenLocalServerIsAvailable()
-    {
-        var connectionString = Environment.GetEnvironmentVariable("FLYAOTORM_TEST_SQLSERVER")!;
-
-        await using var connection = new SqlConnection(connectionString);
-        await connection.OpenAsync();
-
-        try
-        {
-            await ExecuteAsync(connection, """
-if object_id('dbo.flyaotorm_users', 'U') is not null
-    drop table dbo.flyaotorm_users;
-
-create table dbo.flyaotorm_users (
-    id bigint not null primary key,
-    name nvarchar(100) not null,
-    created_at datetime2 not null
-);
-
-insert into dbo.flyaotorm_users(id, name, created_at) values
-(1, N'alice', convert(datetime2, '2026-01-01T00:00:00')),
-(2, N'bob', convert(datetime2, '2026-01-02T00:00:00')),
-(3, N'anna', convert(datetime2, '2026-01-03T00:00:00'));
-""");
-
-            var users = new TestSqlServerUserTable();
-            var db = new FlyDb(connection, DbDialectKind.SqlServer);
-
-            var rows = await db
-                .Select(users)
-                .Where(users.Name.StartsWith("a"))
-                .OrderBy(users.Id.Desc())
-                .Take(2)
-                .ToListAsync();
-
-            Assert.Equal(new long[] { 3, 1 }, rows.Select(static row => row.Id).ToArray());
-        }
-        finally
-        {
-            await ExecuteAsync(connection, "if object_id('dbo.flyaotorm_users', 'U') is not null drop table dbo.flyaotorm_users;");
-        }
-    }
-
     private sealed class TestUserTable : DbTable<TestUser>
     {
         public TestUserTable() : base("users", "User", Materialize)
@@ -1215,30 +1170,6 @@ insert into dbo.flyaotorm_users(id, name, created_at) values
 
         private static TestUser Materialize(System.Data.Common.DbDataReader reader)
             => new();
-    }
-
-    private sealed class TestSqlServerUserTable : DbTable<TestUser>
-    {
-        public TestSqlServerUserTable() : base("flyaotorm_users", "User", Materialize)
-        {
-            Id = new DbColumn<long>(this, "id");
-            Name = new DbColumn<string>(this, "name");
-            CreatedAt = new DbColumn<DateTime>(this, "created_at");
-        }
-
-        public DbColumn<long> Id { get; }
-
-        public DbColumn<string> Name { get; }
-
-        public DbColumn<DateTime> CreatedAt { get; }
-
-        private static TestUser Materialize(System.Data.Common.DbDataReader reader)
-            => new()
-            {
-                Id = reader.GetInt64(0),
-                Name = reader.GetString(1),
-                CreatedAt = reader.GetDateTime(2)
-            };
     }
 
     private sealed class TestOrderTable : DbTable<TestOrder>
